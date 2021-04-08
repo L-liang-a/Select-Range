@@ -10,7 +10,7 @@
           :md="6"
           :lg="4"
           :xl="2">
-          <div :class="[{activeStart: startId == v.id}, {activeEnd: endId == v.id}, 'box']" @click="chooseImg(v, index)">
+          <div :class="[{activeStart: startId == v.id}, {activeEnd: endId == v.id}, 'box', setClass(v)]" @click="chooseImg(v, index)">
             {{ v.url }}
           </div>
         </a-col>
@@ -31,7 +31,8 @@ data () {
     startId: '', // 开始那项的id
     endId: '', // 结束那项的id
     start: null, // 开始那项的索引
-    end: null // 结束那项的id
+    end: null, // 结束那项的id
+    chooseImgs: [], // 选中的数组
   }
 },
 computed: {},
@@ -45,6 +46,19 @@ created () {
   this.imgs = arr
 },
 methods: {
+    // 动态添加class属性
+    setClass (v) {
+      if (this.chooseImgs.length > 0) {
+        // 判断如果选中的数组和v-for遍历出来的数组id一致就给他添加遮罩
+        for (let i = 0; i < this.chooseImgs.length; i++) {
+          if (this.chooseImgs[i].id === v.id) {
+            return 'popContainer'
+          }
+        }
+      } else {
+        return ''
+      }
+    },
     chooseImg (v, index) {
       console.log('index===========================')
       console.log(index)
@@ -78,6 +92,9 @@ methods: {
       console.log(v, index)
       this.endId = v.id
       this.end = index
+      if (this.start !== null && this.end !== null) {
+        this.chooseImgs = this.imgs.slice(this.start, this.end + 1)
+      }
     },
     // 重置选择结果
     resetChoose (v, index) {
@@ -86,6 +103,7 @@ methods: {
       this.end = null
       this.startId = ''
       this.endId = ''
+      this.chooseImgs = []
       this.chooseImg(v, index)
     },
     // 确定
@@ -94,9 +112,15 @@ methods: {
       console.log(this.start)
       console.log('end==================================')
       console.log(this.end)
-      var arr = this.imgs.slice(this.start, this.end + 1)
-      console.log('选中的数组=====================================')
-      console.log(arr)
+      if (this.start === null) {
+        this.$message.error('请选择开始节点')
+      } else if (this.end === null) {
+        this.$message.error('请选择结束节点')
+      } else {
+        var arr = this.imgs.slice(this.start, this.end + 1)
+        console.log('选中的数组=====================================')
+        console.log(arr)
+      }
     }
   }
 
@@ -123,5 +147,14 @@ methods: {
 }
 .activeEnd {
   border: 2px solid red;
+}
+.popContainer{
+  // position: fixed;
+  // top: 0;
+  // left: 0;
+  // right: 0;
+  // bottom: 0;
+  // z-index: 999;
+  background: rgba(0,0,0,0.3);
 }
 </style>
