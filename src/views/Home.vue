@@ -33,6 +33,7 @@ data () {
     start: null, // 开始那项的索引
     end: null, // 结束那项的id
     chooseImgs: [], // 选中的数组
+    clickMid: false, // 判断选中的区间再次点击是否为区间内的中间区域
   }
 },
 computed: {},
@@ -66,7 +67,22 @@ methods: {
       console.log(this.start)
       console.log('end=============================')
       console.log(this.end)
-      // 点击开始
+      // // 拓展
+      // if ((this.start !== null && this.end !== null) && (index > this.start && index < this.end)) {
+      //   this.clickMid = true
+      // }
+      // // 点击开始
+      // if ((this.start === null && this.end === null) || (this.start !== null && index < this.start)) {
+      //   this.chooseStartImg(v, index)
+      // } else if (this.start !== null && this.end === null && index > this.start) { // 点击结束
+      //   this.chooseEndImg(v, index)
+      // } else if (this.start !== null && this.end !== null && (index > this.end || index > this.start) && !this.clickMid) {
+      //   this.chooseEndImg(v, index)
+      // } else if (index === this.start || this.clickMid) { // 如果当前选中的index等于开始的index就重置为开始选择
+      //   this.resetChoose(v, index)
+      // } else {
+      //   this.resetChoose(v, index)
+      // }
       if ((this.start === null && this.end === null)) {
         console.log('点击开始')
         this.chooseStartImg(v, index)
@@ -83,12 +99,18 @@ methods: {
     },
     // 选择开始图片
     chooseStartImg (v, index) {
+      console.log('点击开始')
       console.log(v, index)
       this.startId = v.id
       this.start = index
+      // 拓展功能时解开
+      // if (this.start !== null && this.end !== null) {
+      //   this.chooseImgs = this.imgs.slice(this.start, this.end + 1);
+      // }
     },
     // 选择结束图片
     chooseEndImg (v, index) {
+      console.log('点击结束')
       console.log(v, index)
       this.endId = v.id
       this.end = index
@@ -104,6 +126,7 @@ methods: {
       this.startId = ''
       this.endId = ''
       this.chooseImgs = []
+      this.clickMid = false
       this.chooseImg(v, index)
     },
     // 确定
