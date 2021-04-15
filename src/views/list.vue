@@ -1,23 +1,56 @@
 <template>
-    <div style="width: 1200px;margin: 0 auto;">
-        <!-- <a-button>反选</a-button> -->
-        <a-table :row-selection="rowSelection" :columns="columns" :data-source="data" />
+  <div>
+    <div style="width: 1200px; margin: 0 auto">
+      <a-table
+        :row-selection="rowSelection"
+        :columns="columns"
+        :data-source="data"
+      />
     </div>
+    <a-button @click="exportData">导出</a-button>
+    <!-- 鼠标动效 -->
+    <div class="Waves">
+      <div class="main-container">
+        <div class="waves">
+          <div
+            class="wave"
+            v-for="(item, key) in waves"
+            :key="key"
+            :style="{ ...item }"
+          >
+            <div
+              v-for="n in wavesConfig.total"
+              :key="n"
+              class="wave-item"
+              :style="{
+                transform: `scale(${0.1 * Math.sqrt(n - 1)})`, // 使得波纹大小指数增长
+                opacity: 0.3 * (1 / n), // 因为相互层叠的波纹透明度会相互叠加，需要越小的波纹透明度越低，以免中心颜色过重
+                animationDelay: `${(n - 1) * 0.12}s`, // 越大的波纹越晚出现，以呈现波纹逐渐扩散的效果
+                animationDuration: `${0.6 + n * 0.3}s`, // 波纹动画时间渐增，表现波纹向外扩散渐慢的效果
+                backgroundColor: wavesConfig.waveColor,
+              }"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
+import { export2Excel } from "@/utils/exportExcel.js";
 const columns = [
   {
-    title: 'Name',
-    dataIndex: 'name',
+    title: "Name",
+    dataIndex: "name",
   },
   {
-    title: 'Age',
-    dataIndex: 'age',
+    title: "Age",
+    dataIndex: "age",
   },
   {
-    title: 'Address',
-    dataIndex: 'address',
+    title: "Address",
+    dataIndex: "address",
   },
 ];
 
@@ -31,17 +64,28 @@ for (let i = 0; i < 46; i++) {
   });
 }
 export default {
-name: 'List',
-components: {},
-props: {},
-data () {
+  name: "List",
+  components: {},
+  props: {},
+  data() {
     return {
-        data,
-        columns,
-        selectedRowKeys: [], // Check here to configure the default column
-    }
-},
-computed: {
+      data,
+      columns,
+      selectedRowKeys: [], // Check here to configure the default column
+
+      // 鼠标动效
+      waves: [],
+      wavesConfig: {
+        maxSize: 200, // px，波纹最大尺寸
+        minSize: 100, // px，波纹最小尺寸
+        zIndexCount: 999, // 波纹父元素其实z-index数值
+        waveColor: "#40b6f0", //波纹基础颜色
+        total: 3, //波纹圈层数
+      },
+      clickedCount: 0, //统计点击次数
+    };
+  },
+  computed: {
     rowSelection() {
       const { selectedRowKeys } = this;
       return {
@@ -51,22 +95,91 @@ computed: {
         onSelection: this.onSelection,
       };
     },
-},
-watch: {},
-mounted () {},
-created () {},
-methods: {
+  },
+  watch: {},
+  mounted() {
+    document.getElementById("app").onclick = (e) => {
+      this.clickedCount++; // 统计点击次数
+      this.createWave(e);
+    };
+    let lastCount = 0;
+    // 2秒内无点击清空waves，防止过多的dom累积占用内存
+    setInterval(() => {
+      if (lastCount === this.clickedCount) {
+        this.waves = [];
+      }
+      lastCount = this.clickedCount;
+    }, 2000);
+  },
+  created() {},
+  methods: {
+    exportData () {
+      var list = []
+      this.selectedRowKeys.map(v => {
+        list.push(this.data[v])
+      })
+      console.log(list);
+      export2Excel(this.columns,list)
+    },
+
+
+
+
     onSelectChange(selectedRowKeys) {
-      console.log('selectedRowKeys changed: ', selectedRowKeys);
+      console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
     },
-    getCheckboxProps (v) {
-        console.log(v);
-    }
-},
+    getCheckboxProps(v) {
+      console.log(v);
+    },
 
-}
+    // 鼠标动效
+    createWave(e) {
+      // 让新生成的波纹始终在之前波纹的上层产生叠加效果
+      if (this.wavesConfig.zIndexCount > 99999) {
+        this.wavesConfig.zIndexCount = 999;
+      } else {
+        this.wavesConfig.zIndexCount++;
+      }
+      // 在一定范围内随机生成波纹的大小
+      const waveSize = parseInt(
+        Math.random() * (this.wavesConfig.maxSize - this.wavesConfig.minSize) +
+          this.wavesConfig.minSize
+      );
+      //添加新的波纹数据
+      this.waves.push({
+        left: `${e.clientX - waveSize / 2}px`,
+        top: `${e.clientY - waveSize / 2}px`,
+        zIndex: this.wavesConfig.zIndexCount,
+        width: `${waveSize}px`,
+        height: `${waveSize}px`,
+      });
+    },
+  },
+};
 </script>
 
 <style lang='less' scoped>
+.waves {
+  .wave {
+    position: fixed;
+    pointer-events: none; // 点击事件穿透，使得鼠标点击可以穿透波纹，兼容ie11及以上
+    @keyframes wave {
+      to {
+        //波纹逐渐扩散变大变透明
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+    .wave-item {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      border-radius: 100%;
+      animation-name: wave;
+      animation-fill-mode: forwards;
+      animation-timing-function: ease-out;
+    }
+  }
+}
 </style>

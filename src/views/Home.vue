@@ -1,5 +1,6 @@
 <template>
   <div>
+    <canvas-html></canvas-html>
     <img alt="Vue logo" src="../assets/logo.png">
     <a-row>
       <template v-for="(v,index) in imgs">
@@ -21,9 +22,12 @@
 </template>
 
 <script>
+import canvasHtml from '@/utils/canvas.js'
 export default {
 name: 'home',
-components: {},
+components: {
+  canvasHtml,
+},
 props: {},
 data () {
   return {
@@ -179,5 +183,9 @@ methods: {
   // bottom: 0;
   // z-index: 999;
   background: rgba(0,0,0,0.3);
+}
+c-canvas {
+  background: rgb(226, 225, 225);
+  opacity: 0.3;
 }
 </style>
